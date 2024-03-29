@@ -1,0 +1,30 @@
+{
+  "01": {
+    "width": 250,
+    "height": 154,
+    "x": 210,
+    "y": 0,
+    "pixelRatio": 2
+  },
+  "21": {
+    "width": 212,
+    "height": 135,
+    "x": 2,
+    "y": 168,
+    "pixelRatio": 2
+  },
+  "41": {
+    "width": 184,
+    "height": 148,
+    "x": 0,
+    "y": 0,
+    "pixelRatio": 2
+  },
+  "61": {
+    "width": 202,
+    "height": 184,
+    "x": 227,
+    "y": 147,
+    "pixelRatio": 2
+  }
+}

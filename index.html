@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>@frogcat/jiko</title>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0" />
+    <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+  </head>
+
+  <body>
+    <div id="map" style="position: absolute; top: 0; left: 0; bottom: 0; right: 0"></div>
+    <script>
+      const base = new URL("./", location.href).toString().replace(/\/$/, "");
+      const style = {
+        version: 8,
+        glyphs: "https://maps.gsi.go.jp/xyz/noto-jp/{fontstack}/{range}.pbf",
+        sprite: `${base}/sprite`,
+        sources: {
+          photo: {
+            type: "raster",
+            tiles: ["https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg"],
+            minzoom: 5,
+            maxzoom: 18,
+            tileSize: 256,
+            attribution:
+              "<a href='http://maps.gsi.go.jp/development/ichiran.html'>地理院タイル</a>",
+          },
+          pale: {
+            type: "raster",
+            tiles: ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
+            minzoom: 5,
+            maxzoom: 18,
+            tileSize: 256,
+            attribution:
+              "<a href='http://maps.gsi.go.jp/development/ichiran.html'>地理院タイル</a>",
+          },
+          accident: {
+            type: "vector",
+            tiles: ["https://indigo-lab.github.io/npa-rta/{z}/{x}/{y}.pbf"],
+            minzoom: 14,
+            maxzoom: 14,
+            attribution:
+              "<a href='https://www.npa.go.jp/publications/statistics/koutsuu/opendata/index_opendata.html'>警察庁:交通事故統計情報のオープンデータ(2019年)</a> を加工して作成",
+          },
+          bldg: {
+            type: "vector",
+            tiles: ["https://indigo-lab.github.io/plateau-lod2-mvt/{z}/{x}/{y}.pbf"],
+            minzoom: 10,
+            maxzoom: 16,
+            attribution:
+              "<a href='https://github.com/indigo-lab/plateau-lod2-mvt'>plateau-lod2-mvt by indigo-lab</a> (<a href='https://www.mlit.go.jp/plateau/'>国土交通省 Project PLATEAU</a> のデータを加工して作成)",
+          },
+        },
+        layers: [
+          {
+            id: "background1",
+            type: "raster",
+            source: "pale",
+            minzoom: 5,
+            maxzoom: 16,
+          },
+          {
+            id: "background2",
+            type: "raster",
+            source: "photo",
+            minzoom: 16,
+            maxzoom: 24,
+          },
+          {
+            id: "fill-extrusion-bldg",
+            type: "fill-extrusion",
+            source: "bldg",
+            "source-layer": "bldg",
+            minzoom: 16,
+            maxzoom: 24,
+            filter: ["has", "z"],
+            paint: {
+              "fill-extrusion-color": [
+                "case",
+                ["boolean", ["feature-state", "highlight"], false],
+                "#ff8000",
+                "#c0c0c0",
+              ],
+              "fill-extrusion-height": ["*", ["get", "z"], 1],
+            },
+          },
+          {
+            id: "accident",
+            type: "symbol",
+            source: "accident",
+            "source-layer": "accident",
+            minzoom: 16,
+            maxzoom: 24,
+            layout: { "icon-image": ["get", "事故類型"], "icon-overlap": "always" },
+            paint: {},
+          },
+        ],
+      };
+
+      const map = new maplibregl.Map({
+        container: "map",
+        center: [139.68786, 35.68355],
+        zoom: 16.01,
+        pitch: 60,
+        bearing: 22,
+        hash: true,
+        style: style,
+      });
+
+      map.addControl(new maplibregl.FullscreenControl());
+      map.addControl(new maplibregl.NavigationControl());
+      map.addControl(new maplibregl.ScaleControl());
+
+      const highlight = new Set();
+      map.on("click", "fill-extrusion-bldg", function (e) {
+        const id = e.features[0].id;
+        if (highlight.has(id)) {
+          map.setFeatureState(
+            {
+              source: "bldg",
+              id: id,
+              sourceLayer: "bldg",
+            },
+            {
+              highlight: false,
+            }
+          );
+          highlight.delete(id);
+        } else {
+          map.setFeatureState(
+            {
+              source: "bldg",
+              id: id,
+              sourceLayer: "bldg",
+            },
+            {
+              highlight: true,
+            }
+          );
+          highlight.add(id);
+        }
+      });
+    </script>
+  </body>
+</html>
